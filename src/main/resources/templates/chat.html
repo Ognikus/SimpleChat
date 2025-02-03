@@ -7,6 +7,17 @@
           integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.1/stomp.min.js"></script>
+    <style>
+        .message-sender {
+            text-align: right;
+            color: blue;
+        }
+
+        .message-receiver {
+            text-align: left;
+            color: green;
+        }
+    </style>
 </head>
 <body>
 <div class="container mt-4">
@@ -25,6 +36,7 @@
             <button id="sendMessage" class="btn btn-primary">Send</button>
         </div>
     </div>
+    <button id="themeToggle" class="btn btn-secondary">Toggle Theme</button>
 </div>
 </body>
 <script>
@@ -47,22 +59,31 @@
     function showMessages(message) {
         var chat = document.getElementById('chat');
         var messageElement = document.createElement('div');
-        messageElement.textContent = message.sender + ': ' + message.content;
-        messageElement.className = 'border-bottom mb-1';
+        messageElement.textContent = `[${message.timestamp}] ${message.sender}: ${message.content}`;
+        messageElement.className = message.sender === document.getElementById('senderInput').value.trim() ? 'message-sender' : 'message-receiver';
         chat.appendChild(messageElement);
         chat.scrollTop = chat.scrollHeight;
     }
 
     function sendMessage() {
-        var sender = document.getElementById('senderInput').value;
-        var content = document.getElementById('messageInput').value;
+        var sender = document.getElementById('senderInput').value.trim();
+        var content = document.getElementById('messageInput').value.trim();
+        if (!sender || !content) {
+            alert('Please enter your name and message.');
+            return;
+        }
         var chatMessage = {
             sender: sender,
             content: content
-        }
+        };
         stompClient.send("/app/sendMessage", {}, JSON.stringify(chatMessage));
         document.getElementById('messageInput').value = '';
     }
+
+    document.getElementById('themeToggle').onclick = function() {
+        document.documentElement.setAttribute('data-bs-theme',
+            document.documentElement.getAttribute('data-bs-theme') === 'dark' ? 'light' : 'dark');
+    };
 
     document.getElementById('sendMessage').onclick = sendMessage;
     window.addEventListener('load', connect);
